@@ -1,0 +1,45 @@
+﻿##################################################
+# Naive Bayes 응용실습 : 기상데이터 분석
+##################################################
+
+# 1. 데이터 가져오기 
+weatherAUS <- read.csv('C:/Rwork-II/data/weatherAUS.csv')
+weatherAUS <- weatherAUS[ ,c(-1,-2, -22, -23)] # 칼럼 제외 
+
+# 2. 데이터 생성/전처리  
+set.seed(415)
+idx = sample(1:nrow(weatherAUS), 0.7*nrow(weatherAUS))
+train_w = weatherAUS[idx, ]
+test_w  = weatherAUS[-idx, ]
+
+head(train_w)
+head(test_w)
+dim(train_w) # [1] 25816    20
+dim(test_w) # [1] 11065    20
+
+
+# 3. 분류모델(분류기) 생성 : train data 이용    
+# 형식2) niveBayes(y변수 ~ x변수, data)  
+model = naiveBayes(RainTomorrow ~ ., data = train_w)
+model
+
+# 4. 분류모델 평가(예측기) : test data 이용 
+# 형식) predict(model, test, type='class')
+p<- predict(model, test_w)
+table(p, test_w$RainTomorrow)
+
+
+# 5. 분류정확도 
+
+
+# ----------------------------------------------------------
+# 가상데이터에 대한 정분류율, 오분류율, 정확률, 재현율 
+# ----------------------------------------------------------
+
+# 1. 정분류율(Accuracy) 
+
+# 2. 오분류율(Inaccuracy)  
+
+# 3. 정확률(Precision)  
+
+# 4. 재현율(Recall)   

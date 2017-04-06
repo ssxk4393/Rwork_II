@@ -1,0 +1,38 @@
+﻿library(rpart) # rpart() : 분류모델 생성 
+install.packages("rpart.plot")
+library(rpart.plot) # prp(), rpart.plot() : rpart 시각화
+install.packages('rattle')
+library('rattle') # fancyRpartPlot() : node 번호 시각화 
+
+
+# 단계1. 실습데이터 생성 
+data(iris)
+set.seed(415)
+idx = sample(1:nrow(iris), 0.7*nrow(iris))
+train = iris[idx, ]
+test = iris[-idx, ]
+dim(train) # 105 5
+dim(test) # 45  5
+
+table(train$Species)
+
+# 단계2. 분류모델 생성 
+# rpart(y변수 ~ x변수, data)
+model = rpart(Species~., data=train) # iris의 꽃의 종류(Species) 분류 
+model
+
+# 분류모델 시각화 - rpart.plot 패키지 제공 
+prp(model) # 간단한 시각화   
+rpart.plot(model) # rpart 모델 tree 출력
+fancyRpartPlot(model) # node 번호 출력(rattle 패키지 제공)
+
+
+# 단계3. 분류모델 평가  
+pred <- predict(model, test) # 비율 예측 
+pred <- predict(model, test, type="class") # 분류 예측 
+
+# 1) 분류모델로 분류된 y변수 보기 
+table(pred)
+
+# 2) 분류모델 성능 평가 
+table(pred, test$Species)

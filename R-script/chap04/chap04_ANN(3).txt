@@ -1,0 +1,160 @@
+﻿##################################################
+# Deep learning Neural Network
+##################################################
+
+install.packages("deepnet") # deep Learning 지원 
+library(deepnet) # nn.train()함수 제공 
+## Warning: package 'deepnet' was built under R version 3.1.2
+
+# deep learning 알고리즘을 패키지화
+# deepnet()함수 제공 - 수치 data만 가능 
+# deep learning : 다중 은닉층(Multi Hidden Layer)을 갖는 ANN
+
+# 1. dbn.dnn.train : deep learning model 생성 함수 
+# * DNN : Deep Neural Networks(입력층 -> 은닉층 -> 출력층으로 이루어진 인공신경망)
+# * DBN : Deep Belief Networks(심층 신뢰 신경망 : 계속 층을 쌓아서 전체 신경망 구성) 
+
+# 형식) dbn.dnn.train(x, y, hidden)
+# x : 학습 데이터(matrix 형태만 가능)
+# y : 결과 데이터(vector나 matrix 형태 가능)
+# hidden : 은닉층 노드수(100,100,100) : 노드 100개인 은닉층 3개
+
+d1 <- c(rnorm(1000, 1, 0.5), rnorm(1000, -0.6, 0.2))
+d2 <- c(rnorm(1000, -0.8, 0.2), rnorm(1000, 2, 1))
+x <- matrix(c(d1, d2), nrow = 2000, ncol = 2) # 2000행2열 
+str(x) # [1:2000, 1:2] 
+
+y <-c(rep(1,1000),rep(0,1000)) 
+str(y) # [1:2000]
+
+# x 학습데이터, y 결과데이터 -> 노드 1000개인 3층 은닉층 학습 
+dnn_model <- dbn.dnn.train(x, y, hidden = c(1000,1000,1000))
+
+
+# 2. nn.predict() : deep learning 예측치 생성 
+# 형식) nn.predict(nn, x)
+# nn : train 기능으로 학습된 변수(exDnn) 
+# x : 학습데이터(matrix 형태만 가능)
+
+# (1) 검정데이터 생성
+t1 <- c(rnorm(1000, 1, 0.5), rnorm(1000, -0.6, 0.2))
+t2 <- c(rnorm(1000, -0.8, 0.2), rnorm(1000, 2, 1))
+test <- matrix(c(t1, t2), nrow = 2000, ncol = 2)# 학습데이터와 구조 동일   
+
+# (2) 예측치 생성(검정데이터 이용) 
+pred <-nn.predict(dnn_model, test)
+pred # 예측결과 확률값 
+
+
+# 3. nn.test() : 전체 에러율를 구하는 함수
+# 형식) nn.test(nn, x, y)
+# nn : deep learning model 
+# x : 검정 데이터
+# y : 학습 데이터
+
+nn.test(dnn_model, test, y) 
+
+
+########################################
+### OR 연산 
+########################################
+?nn.train() # Training Neural Network
+# - Training single or mutiple hidden layers neural network by BP
+# - Backpropagation 적용으로 error(cost)를 최소화 
+
+# 1. train/test set 생성 
+x = matrix(c(0,0,1,1,0,1,0,1), ncol=2) 
+y = c(0,1,1,1) # 이진 분류 
+x; y
+
+# 2. deep learning model 생성 : x -> y 형태로 학습 
+nn <- nn.train(x, y, hidden=c(2)) 
+# 기본 히든 노드, 학습률, 학습횟수 
+# hidden = c(10), learningrate = 0.8, numepochs = 3 
+
+# 3. deep learning 예측치 생성
+# 1) 학습이 안된 경우 
+pred <- nn.predict(nn, x) # x : 입력데이터로 평가   
+pred
+
+# 2) 튜닝 : 학습 횟수와 학습률 높이기    
+nn <- nn.train(x, y, hidden=c(2), learningrate=10, numepoch=100)
+
+pred <- nn.predict(nn, x)
+pred
+
+# 분류결과 binary 적용 
+cpred <- ifelse(pred >= 0.5, 1, 0)
+table(cpred, y) # 분류정확도 : 100%
+
+nn.test(nn, x, y) 
+
+########################################
+### AND 연산 
+########################################
+
+# 1. train/test set 생성 
+x = matrix(c(0,0,1,1,0,1,0,1), ncol=2) 
+y = c(0,0,0,1)
+x; y
+
+# 2. deep learning model 생성 : x -> y 형태로 학습 
+nn <- nn.train(x, y, hidden=c(2)) 
+
+
+# 3. deep learning 예측치 생성
+
+# 1) 학습이 안된 경우 
+pred <- nn.predict(nn, x)
+pred
+
+# 2) 학습 횟수는 낮추고, 학습률을 높이는 방법  
+nn <- nn.train(x, y, hidden=c(2), learningrate=10, numepoch=100)
+
+pred <- nn.predict(nn, x)
+pred
+
+# 분류결과 binary 적용 
+cpred <- ifelse(pred >= 0.5, 1, 0)
+table(cpred, y) # 분류정확도 : 100%
+
+
+#########################################
+## XOR 문제해결  
+#########################################
+# AND/OR 잘 분류됨 ANN 활성화 
+# XOR 문제로 인하여 ANN 침체
+# XOR 문제 해결로 인한 딥 신경망으로 복잡한 문제해결  
+
+# 1. dataset 생성 
+x = matrix(c(0,0,1,1,0,1,0,1), ncol=2) 
+y = c(0,1,1,0)
+x; y
+
+# 2. deepnet 학습시키기 
+library(deepnet)
+nn <- nn.train(x, y, hidden=c(2)) 
+
+# 1) 학습이 안된 경우 : 분류 안되는 경우 
+nn.predict(nn, x) # model를 이용하여 x(input) 예측 
+
+
+# 2) 학습 횟수 늘리기 : numepoch=100000(십만번)
+nn <- nn.train(x, y, hidden=c(2), numepoch=100000)
+
+pred <- nn.predict(nn, x)
+pred
+
+# 분류결과 binary 적용 
+cpred <- ifelse(pred >= 0.5, 1, 0)
+table(cpred, y) # 분류정확도 : 100%
+
+# 3) 학습 횟수는 낮추고, 학습률을 높이는 방법  
+nn <- nn.train(x, y, hidden=c(2), learningrate=10, numepoch=10000)
+
+pred <- nn.predict(nn, x)
+pred
+
+# 분류결과 binary 적용 
+cpred <- ifelse(pred >= 0.5, 1, 0)
+table(cpred, y) # 분류정확도 : 100%

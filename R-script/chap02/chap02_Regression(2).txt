@@ -1,0 +1,41 @@
+﻿###################################
+#### 수치예측 관련 모델
+###################################
+# 모델트리 : 선형회귀모델 방식으로 모델 생성 - RWeka
+# - y변수를 수치로 예측
+# - 선형회귀모델 적용  
+
+install.packages('RWeka')
+library(RWeka) # M5P()함수 제공 
+
+# 1) 데이터 셋 가져오기
+# 포루트갈산의 화이트 와인 실습파일 
+wine <- read.csv('C:/Rwork-II/data/whitewines.csv')
+str(wine) # 'data.frame':	4898 obs. of  12 variables:
+# y변수 : quality(블라인드 테스트를 통해서 0~10 등급으로 와인의 질 적용)
+# x변수 : 나머지 11개 변수(화학적 특성)
+# -> 산도(acidity), 당도(sugar), 염화물(chlorides),황(sulfur),알코올(alcohol) 등 특성) 
+
+# 2) 데이터 분석/데이터 셋 생성 
+hist(wine$quality) # 정규분포 
+
+idx = 1:3700 # 4898 중에서 3700개를 training으로 지정 
+training_wine = wine[idx, ]
+testing_wine = wine[-idx, ]
+dim(training_wine) # 3700   12
+dim(testing_wine) # 1198   12
+
+
+# 3) 모델트리 모델 생성  
+model_wine <- M5P(quality ~ ., data = training_wine) 
+model_wine
+
+# 4) 모델 성능 평가 - 검정 데이터 이용 
+pred2 <- predict(model_wine, testing_wine)
+
+# (1) 요약통계량으로 평가 
+summary(pred2)
+summary(testing_wine$quality)
+
+# (2) 상관계수로 평가 
+cor(pred2, testing_wine$quality) # 0.6293855

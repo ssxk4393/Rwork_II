@@ -1,0 +1,68 @@
+﻿##################################################
+#randomForest
+##################################################
+# 결정트리(Decision tree)에서 파생된 모델 
+# 랜덤포레스트는 앙상블 학습기법을 사용한 모델
+# 앙상블 학습 : 새로운 데이터에 대해서 여러 개의 Tree로 학습한 다음, 
+# 학습 결과들을 종합해서 예측하는 모델(PPT 참고)
+# DT보다 성능 향상, 과적합 문제를 해결
+
+
+# 랜덤포레스트 구성방법(2가지)
+# 1. 결정 트리를 만들 때 데이터의 일부만을 복원 추출하여 트리 생성 
+#  -> 데이터 일부만을 사용해 포레스트 구성 
+# 2. 트리의 자식 노드를 나눌때 일부 변수만 적용하여 노드 분류
+#  -> 변수 일부만을 사용해 포레스트 구성 
+# [해설] 위 2가지 방법을 혼용하여 랜덤하게 Tree(학습데이터)를 구성한다.
+
+# 새로운 데이터 예측 방법
+# - 여러 개의 결정트리가 내놓은 예측 결과를 투표방식(voting) 방식으로 선택 
+
+
+install.packages('randomForest')
+library(randomForest) # randomForest()함수 제공 
+
+
+data(iris)
+
+# 1. 랜덤 포레스트 모델 생성 
+# 형식) randomForest(y ~ x, data, ntree, mtry)
+model = randomForest(Species~., data=iris)  
+
+
+# 2. 파라미터 조정 300개의 Tree와 4개의 변수 적용 모델 생성 
+model = randomForest(Species~., data=iris, 
+                     ntree=300, mtry=4, na.action=na.omit )
+model
+
+
+# 3. 최적의 파리미터(ntree, mtry) 찾기
+# - 최적의 분류모델 생성을 위한 파라미터 찾기
+
+ntree <- c(400, 500, 600)
+mtry <- c(2:4)
+
+# 2개 vector이용 data frame 생성 
+param <- data.frame(n=ntree, m=mtry)
+param
+
+
+# 4. 중요 변수 생성  
+model3 = randomForest(Species ~ ., data=iris, 
+                      ntree=500, mtry=2, 
+                      importance = T,
+                      na.action=na.omit )
+model3 
+
+##################################################
+#randomForest 문제 : 기상데이터(weatherAUS)
+##################################################
+# 문1) 100개의 Tree와 2개의 분류변수를 파라미터로 지정하여 모델을 생성하고, 
+#       분류정확도를 구하시오.
+#  조건> 1,2,22,23 칼럼을 제외하여 데이터 셋 구성 
+# 문2) 변수의 중요도 평가를 통해서 가장 중요한 변수를 확인하고, 시각화 하시오. 
+
+weatherAUS = read.csv(file.choose())
+weatherAUS = weatherAUS[ ,c(-1,-2, -22, -23)]
+
+

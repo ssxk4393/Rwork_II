@@ -1,0 +1,89 @@
+﻿############################
+# UBCF 기반 추천시스템 
+############################
+# - 사용자 기반 추천시스템은 사용자 간의 유사성을 바탕으로 추천하는 방식
+# - 예) 영화관람 취향이 나와 가장 유사한 사용자들 중에서 Ton N 선정    
+
+install.packages('recommenderlab')
+library(recommenderlab)
+
+
+##############################
+##  1. 영화 추천 시스템 예
+##############################
+# 첫번째 칼럼 : 사용자
+# 두번째 칼럼 ~ 여섯번째 칼럼 : 영화 평점(5점 척도)
+movie <- read.csv(file.choose(), header = T) # movie.csv
+movie # user movie1 movie2 movie3 movie4 movie5
+
+# 해결과제) 사용자 a는 미관람 영화 movie4와 movie5중 하나를 추천 받고자 한다. 
+
+# 1. 사용자별 영화 취향 유사도 평가 
+# 1) 전치행렬 : movie(3) X user(5) 
+movie_t <- t(movie[,-c(1,5,6)]) # 3개 칼럼 제외(user, movie4, movie5)
+movie_t # movie(3) x user(5)
+class(movie_t) # "matrix"
+colnames(movie_t) <- c("a","b","c","d","e") 
+movie_t
+
+# 2) 상관계수 이용 사용자별 영화 취향 유사도 평가 
+cor(movie_t) # a사용자 기준 세번째(c)와 네번째(d) 사용자 가장 높음 
+
+
+# 2. 추천모델에 맞게 data 구조변경 
+
+# 1) data 가져오기 
+movie <- read.csv(file.choose(), header = T) # movie.csv
+movie
+
+# 2) UBCF(User based CF)의 데이터 구성 
+# - user(row) x item(column) = rating(등급, 시청률)
+
+library(reshape2)
+movie_long <- melt(id=1, movie) # movie(원본 data 구조변경)
+movie_long 
+
+str(movie_long) # 'data.frame':	25 obs. of  3 variables:
+
+# column명 수정 : 사용자(row) X item(column) = rating
+names(movie_long) <- c('user','movie','rating')
+
+# 별점(rating) 0 제외 
+movie_long <- subset(movie_long, rating != 0)
+movie_long
+length(movie_long$rating) # 21(4개 제거됨)
+
+
+# 3. 추천 모델 생성을 위한 객체 생성 : recommenderlab 패키지에서 제공하는 class  
+movie_real <- as(movie_long, "realRatingMatrix") # 5명 사용자의 영화별점 데이터 
+dim(movie_real) # 5 5
+movie_real 
+
+# 객체 내용 : user별로 movie의 rating 표시 
+as(movie_real, "matrix") # 2단계에서 0으로 제거된 부분은 NA 처리됨 
+
+# 4. 추천 모델 생성 
+# 1) data set 생성 : train Set : b~e, recomm Target : a  
+trainSet <- movie_real[c(2:5),] # 학습데이터 생성  
+trainSet # 4 x 5 rating matrix of class ‘realRatingMatrix’ with 5 ratings.
+as(trainSet, 'matrix')
+
+# 2) 추천 대상자 선정 : a 사용자  
+recommTarget <- movie_real[1,] # a 사용자 대상 영화 추천 예측  
+recommTarget # 1 x 5 rating matrix of class ‘realRatingMatrix’ with 3 ratings.
+as(recommTarget, 'matrix')
+
+# 3) 추천 모델생성 : 유사도 코사인 방식 
+# Recommender(data, method, parameter=NULL)
+recom_model <- Recommender(trainSet, method="UBCF", parameter ="Pearson")# 유사도 : 상관계수 방식
+recom_model # learned using 4 users.
+
+
+# 6. 영화 추천 : 사용자a 에게 영화추천(예측치)
+# 1) 예측치 생성 : n = ‘topNList’ : 추천 대상자에게 추천할 item 수
+recomm_list <- predict(recom_model, recommTarget, n=2) # 사용자 당 2개씩 추천
+
+# 2) 추천받은 리스트 보기
+recom_result <- as(recomm_list,"list")
+recom_result # 전체사용자별(model) ->  a 사용자 추천 예측(predict)
+

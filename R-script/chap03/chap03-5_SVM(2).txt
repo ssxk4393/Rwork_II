@@ -1,0 +1,25 @@
+﻿##################################################
+#Support Vector Machine 문제 : spamfiltering
+##################################################
+# 단계1. 실습 데이터 가져오기
+load(file.choose()) # sms_data_total.RData
+ls() 
+
+# 단계2. 데이터 탐색 
+dim(train_sms) # train 데이터 
+dim(test_sms) # test 데이터 
+names(train_sms)
+table(train_sms$type) # sms 메시지 유형 
+table(test_sms$type)
+
+# 단계3. 분류모델 생성 : 기본 파라미터 사용 
+
+
+# 단계4. 분류모델 평가
+
+
+# 단계5. 분류정확도  
+
+
+# 단계6. 분류모델 수정 : 3개 kernel 방식 적용(linear, polynomial, sigmoid)
+# 각 kernel 방식에 따른 차이점 비교  

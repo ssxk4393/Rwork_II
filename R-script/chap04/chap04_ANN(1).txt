@@ -1,0 +1,101 @@
+﻿##################################################
+#Neural Network 
+##################################################
+# 신경망(neural network) 기법은 반복적인 학습 과정을 거쳐 데이터에 내재되어 있는 
+# 패턴을 찾아내고 이를 일반화함으로써 대용량 데이터로부터 의사결정에 필요한 
+# 유용한 정보를 찾아내는 블랙박스 기법이다. 
+# 여러 분야의 다양한 문제에 적용될 수 있고, 독립변수와 종속변수의 관계 확인이 어려운  
+# 데이터에 대해서도 좋은 결과를 주는 것으로 알려져 있다. 
+# 하지만, 분류나 예측 결과만을 제공할 뿐 결과가 어떻게 나왔는가에 대한 
+# 이유를 설명하지 못한다.
+
+# 주요 패키지 : nnet, neuralnet 
+
+##################################################
+# Neural Network : nnet
+##################################################
+
+install.packages("nnet") # 뉴럴네트워크 
+library(nnet)
+
+
+#################################
+# [ANN 기초 실습] 
+#################################
+
+# 1) data frame 생성 
+df = data.frame(
+  x2 = c(1:6),
+  x1 = c(6:1),
+  y = factor(c('n','n','n','y','y','y'))
+)
+str(df)
+df
+
+# 2) 분류모형 생성 - nnet(formula, size = hidden 수) 
+model_net1 = nnet(y ~ ., df, size = 1) # size는 분석자가 지정
+
+
+# network, input, output 보기 
+model_net1
+
+
+# 가중치(weights) 내용 보기 
+summary(model_net1) 
+
+
+
+# 3) 분류모형 예측
+model_net1$fitted.values # 변수 이용 
+
+predict(model_net1, df) # 함수 이용
+
+p<- predict(model_net1, df, type="class") # 분류 결과(y변수) 
+
+
+# 4. 분류정확도 
+table(p, df$y) 
+
+
+
+#################################
+# [iris 이용 ANN 실습] 
+#################################
+
+data(iris)
+set.seed(123) # random 결과를 동일하게 지
+idx = sample(1:nrow(iris), 0.7*nrow(iris))
+training = iris[idx, ]
+testing = iris[-idx, ]
+training
+testing
+names(training)
+nrow(training) # 105(70%)
+
+
+# 분류모델 생성 
+model_net_iris1 = nnet(Species ~ ., training, size = 1) 
+model_net_iris1 # 11 weights
+model_net_iris3 = nnet(Species ~ ., training, size = 3) 
+model_net_iris3 # 27 weights
+
+#size는 은닉층 노드 수, 정규화 없이 신경망 만들기
+summary(model_net_iris1) # 11개 가중치 확인
+summary(model_net_iris3) # 27개 가중치 확인 
+
+
+# 분류모델 평가 
+predict(model_net_iris1, testing, type = "class") # 분류 결과 보기 
+predict(model_net_iris3, testing, type = "class") # 분류 결과 보기 
+
+
+# 혼돈 매트릭스 적용 
+table(predict(model_net_iris1, testing, type = "class"), testing$Species)
+
+table(predict(model_net_iris3, testing, type = "class"), testing$Species)
+
+#------------------------------------------------------------
+# [ANN 고려사항] 
+# 과적합(overfitting)을 피하기 위해서 정규화 과정이 필요
+# 최적의 Hidden node 찾기  
+#------------------------------------------------------------

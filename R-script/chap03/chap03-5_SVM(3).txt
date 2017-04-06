@@ -1,0 +1,26 @@
+﻿#######################################
+### 스캔된 이미지 문자 인식 
+#######################################
+# 1. 파일 가져오기 
+letterdata = read.csv(file.choose())	#letterdata.csv
+str(letterdata) # 'data.frame':	20000 obs. of  17 variables:
+# y : letter, x : 나머지 16
+
+# 2. 데이터 셋 생성 
+set.seed(415)
+idx = sample(1:nrow(letterdata), 0.7*nrow(letterdata))
+training_letter = letterdata[idx, ]
+testing_letter  = letterdata[-idx, ]
+
+# 3. NA 제거 
+training_letter2 = na.omit(training_letter)
+testing_letter2 = na.omit(testing_letter)
+
+# 4. 분류모델 생성 
+model_letter <- svm(letter~., data = training_letter2)
+
+# 5. 분류모델 평가 
+pred_letter <- predict(model_letter, testing_letter2)
+
+# 혼돈 matrix 
+table(pred_letter, testing_letter2$letter)

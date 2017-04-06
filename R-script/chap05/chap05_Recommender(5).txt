@@ -1,0 +1,33 @@
+﻿#####################################
+# IBCF 기반 영화 추천 모델 실습
+#####################################
+library(recommenderlab)
+
+# 해결과제) 아이템별 영화 평가 점수 데이터셋((binary data)으로 추천 모델 생성  
+
+data(MovieLense) # recommenderlab 패키지에서 제공 
+MovieLense # 943 x 1664 rating matrix of class ‘realRatingMatrix’ with 99392 ratings.
+
+# 과적합 문제 해결을 위해서 영화의 행과 열수 지정 : 50편 이상 영화를 본 사용자, 100편 이상 선택된 영화 
+ratings_movies = MovieLense[ rowCounts(MovieLense) >= 50, colCounts(MovieLense) >= 100]
+ratings_movies # 560 x 332 rating matrix of class 
+
+# 이진화 변환 
+ratings_movies_b <- binarize(ratings_movies, minRating=1) # 1이상은 1, 나머지는 0(2진화)
+as(ratings_movies_b, 'matrix') # FALSE(NA)/TRUE(숫자) 이진화 
+
+#  ratings_movies 에서 랜덤으로 training 데이터셋을 추출
+idx <-sample(1:nrow(ratings_movies), nrow(ratings_movies)*0.9)
+trainSet <-ratings_movies_b[idx, ] # 90%
+recomm_target <-ratings_movies_b[-idx, ] # 10%
+dim(trainSet) # 508 336
+dim(recomm_target) # 57 336
+
+
+# IBCF 방식 : 아이템 기반 협업 필터링, Jaccard 유사도   
+recomm_model <- Recommender(trainSet, method="IBCF", parameter ="Jaccard") # 508명 대상 모델 생성 
+recomm_list <- predict(recomm_model, recomm_target, n=5) # 57명 사용자에게 5개씩 영화 추천 
+recomm_list  # Recommendations as ‘topNList’ with n = 5 for 57 users. 
+
+# 57명 사용자에게 추천영화 5개씩 제공  
+head(as(recomm_list, "list")) # 6명 추천영화 보기 

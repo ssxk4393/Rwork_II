@@ -1,0 +1,31 @@
+#####################################################
+#randomForest: 데이터 분할(메모리 효율성)  
+#####################################################
+
+install.packages('foreach')
+library(foreach)
+
+# 형식) foreach(반복수) %do% 반복작업 
+# 1000 tree -> 250씩 4개 분할 처리 
+# foreach(반복수) %do% randomForest()
+model_iris <- foreach(i= rep(250, 4), .combine = combine) %do% 
+                randomForest(Species~., data=iris, 
+                    ntree=i, mtry=2, na.action=na.omit )
+
+#####################################################
+#randomForest: 병렬 처리(CPU 효율성) 
+#####################################################
+library(randomForest) 
+library(foreach)
+install.packages('doParallel')
+library(doParallel) 
+
+# 멀티코어(4개 cpu 사용) 방식의 병렬 처리
+registerDoParallel(cores=4) # multicore수 4개 지정  
+getDoParWorkers() # 현재 사용 가능한 core 수 보기 
+
+system.time(
+        rf_iris <- foreach(ntree=rep(250, 8), .combine=combine, .packages = 'randomForest', multicombine=TRUE) %dopar%
+            randomForest(Species~., data=iris, ntree=ntree, na.action=na.omit )
+    )
+

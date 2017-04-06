@@ -1,0 +1,68 @@
+﻿###############################
+# kNN 분류모델 : 응용 실습    # 
+###############################
+
+# 1. 데이터셋 가져오기 
+#"wdbc_data.csv" : 유방암 진단결과 데이터 셋
+# Wisconsin Diagnostic Breast Cancer (WDBC) : 위스콘신 유방암 센터 
+wdbc <- read.csv('C:/Rwork-II/data/wdbc_data.csv', stringsAsFactors = FALSE)
+str(wdbc)
+
+
+# 2. 데이터 탐색 및 전처리 
+wdbc <- wdbc[-1] # id 칼럼 제외 
+head(wdbc)
+head(wdbc[, c('diagnosis')], 10)
+
+# 1) 목표변수(y변수)를 factor형으로 변환 
+wdbc$diagnosis <- factor(wdbc$diagnosis, levels = c("B", "M"))
+str(wdbc$diagnosis)
+# 백분율 적용 빈도수 보기  
+prop.table(table(wdbc$diagnosis)) * 100
+
+# 2) x변수 보기 : 30개 실험 측정치 칼럼 
+summary(wdbc[,c(2:31)])
+
+# 3) 수치 데이터 정규화
+normalize <- function(x){ # 정규화를 위한 함수 정의 
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# wdbc[2:31] : x변수에 해당한 칼럼 대상 정규화 수행 
+wdbc_x <- as.data.frame(lapply(wdbc[2:31], normalize))
+wdbc_x
+class(wdbc_x) # [1] "data.frame"
+nrow(wdbc_x) # [1] 569
+
+
+# 4) 훈련데이터와 검정데이터 생성 : 7 : 3 비율 
+set.seed(415) # 시드값 적용 - 동일한 랜덤값 제공 
+idx = sample(1:nrow(wdbc_x), 0.7*nrow(wdbc_x))
+wdbc_train = wdbc_x[idx, ] # 훈련 데이터 
+wdbc_test = wdbc_x[-idx, ] # 검정 데이터 
+dim(wdbc_train) # [1] 398  30
+dim(wdbc_test) # [1] 171  30
+
+# 원본 데이터에서 y변수가 포함된 칼럼값 저장 - 분류모델 결과 확인용  
+wdbc_train_y <- wdbc[idx, 1] # 훈련 데이터의 diagnosis 칼럼 
+wdbc_test_y <- wdbc[-idx, 1] # 검정 데이터의 diagnosis 칼럼 
+
+
+# 3. kNN 분류모델 생성 
+
+# k값 구하기 - 훈련데이터의 제곱근
+dim(wdbc_train) # [1] 398  30
+k = sqrt(398)
+k # 19.94994 -> k = 19(홀수 지정 )
+wdbc_pred <- knn(wdbc_train, wdbc_test, wdbc_train_y, k=19)
+wdbc_pred # 분류예측모델 
+
+
+# 4. kNN 분류모델 성능 평가 
+
+# 검정데이터의 y변수와 분류모델 예측치와 비교 평가  
+table(wdbc_pred, wdbc_test_y) # 행 : 분류예측치, 열 : 원본 data 
+
+# 분류정확도 
+(110+54)/ nrow(wdbc_test)              
+

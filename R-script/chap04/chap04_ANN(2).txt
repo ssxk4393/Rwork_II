@@ -1,0 +1,76 @@
+﻿##################################################
+# Neural Network : neuralnet 
+##################################################
+# - 가장 최근에 나온 패키지 
+# - y변수에 수치 데이터만 가능(범주형 변수 안됨)
+# - 예) yes, no -> 1, 0 변환 
+# - 은닉노드를 갖는 선형회귀 분석 방법과 유사 
+# - Back Propagation 알고리즘 적용 
+
+install.packages('neuralnet')
+library(neuralnet)
+
+
+data("iris")
+table(iris$Species) 
+set.seed(123) # random 결과를 동일하게 지
+idx = sample(1:nrow(iris), 0.7*nrow(iris))
+training_iris = iris[idx, ]
+testing_iris = iris[-idx, ]
+dim(training_iris) # 105   6
+dim(testing_iris) # 45  6
+
+# 1) 숫자형으로 변환 Species2 칼럼 생성 
+training_iris$Species2[training_iris$Species == 'setosa'] <- 1 
+training_iris$Species2[training_iris$Species == 'versicolor'] <- 2 
+training_iris$Species2[training_iris$Species == 'virginica'] <- 3
+training_iris$Species <- NULL # 기존 문자열 칼럼 제거 
+head(training_iris); tail(training_iris)
+
+testing_iris$Species2[testing_iris$Species == 'setosa'] <- 1 
+testing_iris$Species2[testing_iris$Species == 'versicolor'] <- 2 
+testing_iris$Species2[testing_iris$Species == 'virginica'] <- 3
+testing_iris$Species <- NULL # 기존 문자열 칼럼 제거 
+head(testing_iris); tail(testing_iris)
+
+# 2) 정규화 함수 정의 : 0 ~ 1 범위로 정규화 
+normal <- function(x){
+  return (( x - min(x)) / (max(x) - min(x)))
+}
+
+# 칼럼 값 정규화 - 전체 칼럼값의 규모를 축소(0~1)
+training_nor <- as.data.frame(lapply(training_iris,normal))
+summary(training_nor) # 0 ~ 1 확인
+
+testing_nor <- as.data.frame(lapply(testing_iris,normal))
+summary(testing_nor) # 0 ~ 1 확인
+
+
+# 3) 분류모델 생성 - 은닉 노드 1개 
+# 형식) neuralnet(formula, data, hidden) 
+model_net = neuralnet(Species2 ~ Sepal.Length+Sepal.Width+Petal.Length+Petal.Width, 
+                      data=training_nor, hidden = 1, linear.output=FALSE)
+model_net
+plot(model_net) # Neural Network 모형으로 시각화 
+
+# 4) 모델 성능 평가 - compute() 함수 이용 검정 데이터 예측 생성
+# 모델의 정확도를 평가하기 위해서 predict() 대신 compute()함수 이용
+# 예측된 꽃의 분류와 실제 값(test set) 사이의 상관관계 측정 
+model_result <- compute(model_net, testing_nor[c(1:4)])
+model_result$net.result # 분류 예측값 보기  
+
+# 상관분석 : 두 수치 벡터 값의 상관계수로 두 변수 간 선형관계의 강도 측정 
+cor(model_result$net.result, testing_nor$Species2)
+
+
+# 5) 분류모델 성능 향상 : 은닉노드 2개 지정(backprop 적용)  
+model_net = neuralnet(Species2 ~ Sepal.Length+Sepal.Width+Petal.Length+Petal.Width, 
+                      data=training_nor, hidden = 2, linear.output=FALSE,
+                      algorithm="backprop", learningrate=0.01) 
+# algorithm="backprop" : 역전파 알고리즘 적용 
+# learningrate : backprop 사용시 설정
+model_net
+
+model_result <- compute(model_net, testing_nor[c(1:4)])
+cor(model_result$net.result, testing_nor$Species2)  
+

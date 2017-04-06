@@ -1,0 +1,38 @@
+﻿#################################
+# 2. 음식 추천 시스템 예
+#################################
+# 해결과제) 음식주문 패턴에 따른 음식 추천 
+
+# 1. 데이터 셋 가져오기 
+gloseri <- read.csv(file.choose(), header = T) # gloseri.csv
+head(gloseri)
+
+# 2. realReatingMatrix 변환 
+realData <- as(gloseri, 'realRatingMatrix')
+as(realData, 'matrix') # user*item(7*5)  
+
+# 3. 훈련데이터 생성 
+trainData <- sample(1:7, 6)
+trainSet <- realData[trainData]
+trainSet # 6 x 5 rating matrix of class ‘realRatingMatrix’ with 19 ratings.
+as(trainSet, 'matrix') 
+
+# - 3가지 이상 음식을 주문한 사용자만 학습데이터 선정  
+trainSet2 <- trainSet[rowCounts(trainSet) >= 3 ]
+as(trainSet2, 'matrix') # 전체 6명중 5명 선정 
+
+
+# 4. 추천 모델 생성 : 사용자기반 협업필터링, 코사인 유사도 
+recomm_model_gl <- Recommender(trainSet2, method="UBCF", parameter ="Cosine")
+recomm_model_gl # learned using 5 users.
+
+recomm_target_gl <- realData[-trainData ]  # 1 x 5 rating matrix
+recomm_target_gl # 1 x 5 rating matrix of class ‘binaryRatingMatrix’ with 3 ratings.
+as(recomm_target_gl, 'matrix')
+
+# - 추천받은 음식수 지정 : TopN = 2
+recommandList <- predict(recomm_model_gl, recomm_target_gl, n=2) # 사용자 당 Top2개 추천 
+
+# 추천받은 리스트 보기 
+recomm_result <- as(recommandList, 'list')
+recomm_result
